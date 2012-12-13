@@ -10,13 +10,15 @@ use File::Copy::Recursive ();
 use File::Remove ();
 use List::MoreUtils ();
 use Scalar::Util ();
+use Carp::Always ();
 
 sub import { 
 	my $target = scalar caller;
 
+	Carp::Always->import::into($target);
 	Path::Class->import::into($target,qw( file dir ));
 	Carp->import::into($target,qw( confess croak carp ));
-	File::ShareDir->import::into($target,qw( dist_dir class_dir ));
+	File::ShareDir->import::into($target,qw( dist_dir module_dir class_dir ));
 	File::Copy::Recursive->import::into($target,qw( dircopy ));
 	File::Remove->import::into($target,qw( remove ));
 	List::MoreUtils->import::into($target,qw(
@@ -31,6 +33,8 @@ sub import {
 		set_prototype
 	));
 	my $stash = Package::Stash->new($target);
+
+	$stash->add_symbol('&package_stash',sub { $stash });
 
 	$stash->add_symbol('&env',sub {
 		my $key = join('_',@_);
