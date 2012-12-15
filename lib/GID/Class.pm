@@ -22,10 +22,11 @@ use GID ();
 use MooX ();
 
 sub import {
-	shift;
+	my $class = shift;
 	my $target = scalar caller;
+	my @args = @_;
 
-	GID->import::into($target,@_);
+	GID->import::into($target,@args);
 
 	my $stash = $target->package_stash;
 	my @gid_methods = $stash->list_all_symbols('CODE');
