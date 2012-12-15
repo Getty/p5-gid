@@ -105,6 +105,27 @@ sub import {
 	});
 }
 
+sub _gid_import {
+	my ( $class, $target, @args ) = @_;
+	$class->_gid_load_packages;
+	$class->_gid_parse_import_args($target, @args);
+	my %include;
+	my %exclude;
+	my %features;
+	%include = %{$import_args{$target}->{include}} if defined $import_args{$target}->{include};
+	%exclude = %{$import_args{$target}->{exclude}} if defined $import_args{$target}->{exclude};
+	%features = %{$import_args{$target}->{features}} if defined $import_args{$target}->{features};
+	for (@packages_order) {
+		$class->_gid_import_package(
+			$target,
+			$_,
+			$packages_parsed{$_},
+			[\%include,\%exclude,\%features],
+			@args
+		);
+	}
+}
+
 sub _gid_load_packages {
 	my ( $self ) = @_;
 
@@ -144,25 +165,24 @@ sub _gid_load_packages {
 	}
 }
 
-sub _gid_import {
-	my ( $class, $target, @args ) = @_;
-	$class->_gid_load_packages;
-	$class->_gid_parse_import_args($target, @args);
-	my %include;
-	my %exclude;
-	my %features;
-	%include = %{$import_args{$target}->{include}} if defined $import_args{$target}->{include};
-	%exclude = %{$import_args{$target}->{exclude}} if defined $import_args{$target}->{exclude};
-	%features = %{$import_args{$target}->{features}} if defined $import_args{$target}->{features};
-	for (@packages_order) {
-		$class->_gid_import_package(
-			$target,
-			$_,
-			$packages_parsed{$_},
-			[\%include,\%exclude,\%features],
-			@args
-		);
+sub _gid_parse_import_args {
+	my ( $class, $target, @args_list ) = @_;
+	my %args;
+	for (@args_list) {
+		if ($_ =~ m/^-(.*)/) {
+			$args{exclude} = {} unless defined $args{exclude};
+			$args{exclude}->{$1} = 1;
+		} elsif ($_ =~ m/^\+(.*)/) {
+			$args{feature} = {} unless defined $args{feature};
+			$args{feature}->{$1} = 1;
+		} else {
+			$args{include} = {} unless defined $args{include};
+			$args{include}->{$_} = 1;
+		}
 	}
+	die __PACKAGE__.": you can't define -exclude's and include's on import of GID"
+		if defined $args{exclude} and defined $args{include};
+	$import_args{$target} = \%args;
 }
 
 sub _gid_import_package {
@@ -213,26 +233,6 @@ sub _gid_import_package {
 	if ($load_package) {
 		$import->import::into($target,@use_import_args);
 	}
-}
-
-sub _gid_parse_import_args {
-	my ( $class, $target, @args_list ) = @_;
-	my %args;
-	for (@args_list) {
-		if ($_ =~ m/^-(.*)/) {
-			$args{exclude} = {} unless defined $args{exclude};
-			$args{exclude}->{$1} = 1;
-		} elsif ($_ =~ m/^\+(.*)/) {
-			$args{feature} = {} unless defined $args{feature};
-			$args{feature}->{$1} = 1;
-		} else {
-			$args{include} = {} unless defined $args{include};
-			$args{include}->{$_} = 1;
-		}
-	}
-	die __PACKAGE__.": you can't define -exclude's and include's on import of GID"
-		if defined $args{exclude} and defined $args{include};
-	$import_args{$target} = \%args;
 }
 
 1;
