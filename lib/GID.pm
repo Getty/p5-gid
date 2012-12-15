@@ -1,11 +1,33 @@
 package GID;
+# ABSTRACT: Get It Done - with Perl
+
+=head1 SYNOPSIS
+
+  use GID;
+
+  
+
+=head1 DESCRIPTION
+
+This library is made for beginners and people who want to instantly solve
+their problems in Perl. It imports lots of standard functions inside your
+scope and so makes it easy for you to work with Perl, without thinking about
+which modules you need to use. All functions are described in this
+documentation.
+
+=cut
 
 use strictures;
 use warnings;
 use Import::Into;
 use Package::Stash;
 
-our @packages = (
+my %gid_packages = (
+	DB => 'GID::DB',
+	Web => 'GID::Web',
+);
+
+my @packages = (
 	'utf8' => undef,
 	'Carp::Always' => undef,
 	'Path::Class' => [qw(
@@ -177,7 +199,11 @@ sub _gid_parse_import_args {
 			$args{feature}->{$1} = 1;
 		} else {
 			$args{include} = {} unless defined $args{include};
-			$args{include}->{$_} = 1;
+			if ($gid_packages{$_}) {
+				$args{include}->{$gid_packages{$_}} = 1;
+			} else {
+				$args{include}->{$_} = 1;
+			}
 		}
 	}
 	die __PACKAGE__.": you can't define -exclude's and include's on import of GID"
