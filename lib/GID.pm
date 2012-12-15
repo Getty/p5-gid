@@ -18,6 +18,7 @@ documentation.
 use strictures 1;
 use Import::Into;
 use Package::Stash;
+use Class::Load qw( load_class );
 
 my %gid_packages = (
 	DB => 'GID::DB',
@@ -27,6 +28,9 @@ my %gid_packages = (
 my @packages = (
 	'utf8' => undef,
 	'Carp::Always' => undef,
+	'DateTime' => undef,
+	'DateTime::Duration' => undef,
+	'URI' => undef,
 	'Path::Class' => [qw(
 		file
 		dir
@@ -89,6 +93,42 @@ my @packages = (
 		isvstring
 		looks_like_number
 		set_prototype
+	)],
+	'Class::Load' => [qw(
+		load_class
+		load_optional_class
+		try_load_class
+		is_class_loaded
+		load_first_existing_class
+	)],
+	'File::Temp' => [qw(
+		tempfile
+		tempdir
+	)],
+	'URL::Encode' => [qw(
+		url_encode
+		url_encode_utf8
+		url_decode
+		url_decode_utf8
+		url_params_each
+		url_params_flat
+		url_params_mixed
+		url_params_multi
+	)],
+	'File::Copy' => [qw(
+		+copy
+		+move
+		cp
+		mv
+	)],
+	'LWP::Simple' => [qw(
+		+get
+		+head
+		+getprint
+		+getstore
+		+mirror
+		+is_success
+		+is_error
 	)],
 	'DDP' => [qw(
 		+p
@@ -254,6 +294,7 @@ sub _gid_import_package {
 		# TODO
 	}
 	if ($load_package) {
+		load_class($import);
 		$import->import::into($target,@use_import_args);
 	}
 }
