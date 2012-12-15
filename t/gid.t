@@ -45,6 +45,23 @@ use Test::More;
 		return io('xxxxxxxxxxxxxxxx');
 	}
 
+	sub test_env {
+		return env('GID_TEST_ENV_TEST');
+	}
+
+	1;
+}
+
+{
+	package GIDTest::NoEnv;
+	use GID qw(
+		-env
+	);
+
+	sub test_env {
+		return env('GID_TEST_ENV_TEST');
+	}
+
 	1;
 }
 
@@ -99,5 +116,13 @@ eval {
 	GIDTest::NoListMoreUtils->test_uniq;
 };
 like($@,qr/Undefined subroutine &GIDTest::NoListMoreUtils::uniq/,'Excluded List::MoreUtils, uniq must fail');
+
+$ENV{GID_TEST_ENV_TEST} = 23;
+
+is(GIDTest::NoIo->test_env('GID_TEST_ENV_TEST'),"23",'Checking env() through GIDTest::NoIo');
+eval {
+	GIDTest::NoEnv->test_env;
+};
+like($@,qr/Undefined subroutine &GIDTest::NoEnv::env/,'Excluded env gid function, env call must fail');
 
 done_testing;

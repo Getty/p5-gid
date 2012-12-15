@@ -154,14 +154,6 @@ sub import {
 	my @args = @_;
 
 	$class->_gid_import($target,@args);
-
-	my $stash = Package::Stash->new($target);
-	$stash->add_symbol('&package_stash',sub { $stash });
-
-	$stash->add_symbol('&env',sub {
-		my $key = join('_',@_);
-		return defined $ENV{$key} ? $ENV{$key} : "";
-	});
 }
 
 sub _gid_import {
@@ -183,6 +175,36 @@ sub _gid_import {
 			@args
 		);
 	}
+	$class->_gid_import_functions($target,[\%include,\%exclude,\%features]);
+}
+
+sub _gid_import_functions {
+	my ( $self, $target, $include_exclude_features ) = @_;
+
+	my $stash = Package::Stash->new($target);
+
+	$self->_gid_import_function($stash,'package_stash',sub {
+		$stash
+	}, $include_exclude_features);
+
+	$self->_gid_import_function($stash,'env',sub {
+		my $key = join('_',@_);
+		return defined $ENV{$key} ? $ENV{$key} : "";
+	}, $include_exclude_features);
+
+}
+
+sub _gid_import_function {
+	my ( $self, $stash, $function, $sub, $include_exclude_features ) = @_;
+	my %include = %{$include_exclude_features->[0]};
+	my %exclude = %{$include_exclude_features->[1]};
+	my %features = %{$include_exclude_features->[2]};
+	if (%exclude) {
+		return if defined $exclude{$function};
+	} elsif (%include) {
+		return unless defined $include{$function};
+	}
+	$stash->add_symbol('&'.$function,$sub);
 }
 
 sub _gid_load_packages {
