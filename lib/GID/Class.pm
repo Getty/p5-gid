@@ -1,8 +1,20 @@
 package GID::Class;
 # ABSTRACT: Making your classes with GID
 
-use strictures;
-use warnings;
+=head1 SYNOPSIS
+
+  package MyApp::Class;
+  use GID::Class;
+
+  has last_index => ( is => 'rw' );
+
+  sub test_last_index {
+    return last_index { $_ eq 1 } ( 1,1,1,1 );
+  }
+
+=cut
+
+use strictures 1;
 use Import::Into;
 use Scalar::Util qw( blessed );
 

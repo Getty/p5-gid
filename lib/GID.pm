@@ -5,8 +5,6 @@ package GID;
 
   use GID;
 
-  
-
 =head1 DESCRIPTION
 
 This library is made for beginners and people who want to instantly solve
@@ -17,8 +15,7 @@ documentation.
 
 =cut
 
-use strictures;
-use warnings;
+use strictures 1;
 use Import::Into;
 use Package::Stash;
 
