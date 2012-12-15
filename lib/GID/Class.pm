@@ -34,6 +34,7 @@ sub import {
 		ClassStash
 		HasEnv
 		Options
+		Types::MooseLike
 	));
 
 	$target->can('extends')->('GID::Object');
