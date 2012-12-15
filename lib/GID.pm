@@ -31,6 +31,7 @@ my @packages = (
 	'DateTime' => undef,
 	'DateTime::Duration' => undef,
 	'URI' => undef,
+	'Class::Method::Modifiers' => undef,
 	'Path::Class' => [qw(
 		file
 		dir
