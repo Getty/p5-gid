@@ -26,6 +26,8 @@ my %gid_packages = (
 );
 
 my @packages = (
+	'strict' => undef,
+	'warnings' => [[ FATAL => 'all' ]],
 	'utf8' => undef,
 	'Carp::Always' => undef,
 	'DateTime' => undef,
