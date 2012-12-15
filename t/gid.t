@@ -66,6 +66,23 @@ use Test::More;
 }
 
 {
+	package GIDTest::EnvOnly;
+	use GID qw(
+		env
+	);
+
+	sub test_env {
+		return env('GID_TEST_ENV_TEST');
+	}
+
+	sub test_io {
+		return io('xxxxxxxxxxxxxxxx');
+	}
+
+	1;
+}
+
+{
 	package GIDTest::NoListMoreUtils;
 	use GID qw(
 		-List::MoreUtils
@@ -120,9 +137,19 @@ like($@,qr/Undefined subroutine &GIDTest::NoListMoreUtils::uniq/,'Excluded List:
 $ENV{GID_TEST_ENV_TEST} = 23;
 
 is(GIDTest::NoIo->test_env('GID_TEST_ENV_TEST'),"23",'Checking env() through GIDTest::NoIo');
+
 eval {
 	GIDTest::NoEnv->test_env;
 };
 like($@,qr/Undefined subroutine &GIDTest::NoEnv::env/,'Excluded env gid function, env call must fail');
+
+eval {
+	GIDTest::EnvOnly->test_io;
+};
+like($@,qr/Undefined subroutine &GIDTest::EnvOnly::io/,'Including env only, io call must fail');
+
+$ENV{GID_TEST_ENV_TEST} = 24;
+
+is(GIDTest::EnvOnly->test_env('GID_TEST_ENV_TEST'),"24",'Checking env() through GIDTest::EnvOnly');
 
 done_testing;
