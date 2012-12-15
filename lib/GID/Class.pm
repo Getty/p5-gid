@@ -1,12 +1,12 @@
 package GID::Class;
-# ABSTRACT: Making your classes in GID
+# ABSTRACT: Making your classes with GID
 
-use Package::Stash;
+use strictures;
+use warnings;
 use Import::Into;
 use Scalar::Util qw( blessed );
 
 use GID ();
-use Moo ();
 use MooX ();
 
 sub import {
@@ -15,7 +15,7 @@ sub import {
 
 	GID->import::into($target,@_);
 
-	my $stash = Package::Stash->new($target);
+	my $stash = $target->package_stash;
 	my @gid_methods = $stash->list_all_symbols('CODE');
 
 	MooX->import::into($target,qw(
@@ -31,8 +31,7 @@ sub import {
 		my $attribute_arg = shift;
 		my @attribute_args = @_;
 		my @attributes = ref $attribute_arg eq 'ARRAY' ? @{$attribute_arg} : ($attribute_arg);
-		for (@attributes) {
-			my $attribute = $_;
+		for my $attribute (@attributes) {
 			if (grep { $attribute eq $_ } @gid_methods) {
 				my $gid_method = $target->class_stash->get_method($attribute);
 				$target->class_stash->remove_method($attribute);

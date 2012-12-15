@@ -1,45 +1,238 @@
 package GID;
 
+use strictures;
+use warnings;
 use Import::Into;
 use Package::Stash;
 
-use Path::Class ();
-use Carp ();
-use File::ShareDir ();
-use File::Copy::Recursive ();
-use File::Remove ();
-use List::MoreUtils ();
-use Scalar::Util ();
-use Carp::Always ();
+our @packages = (
+	'utf8' => undef,
+	'Carp::Always' => undef,
+	'Path::Class' => [qw(
+		file
+		dir
+	)],
+	'Carp' => [qw(
+		confess
+		croak
+		carp
+	)],
+	'File::ShareDir' => [qw(
+		dist_dir
+		module_dir
+		class_dir
+	)],
+	'File::Copy::Recursive' => [qw(
+		dircopy
+	)],
+	'File::Remove' => [qw(
+		remove
+	)],
+	'List::MoreUtils' => [qw(
+		any
+		all
+		none
+		notall
+		firstidx
+		first_index
+		lastidx
+		last_index
+		insert_after
+		insert_after_string
+		apply
+		indexes
+		after_incl
+		before_incl
+		firstval
+		first_value
+		lastval
+		last_value
+		each_array
+		each_arrayref
+		pairwise
+		natatime
+		mesh
+		zip
+		uniq
+		distinct
+		minmax
+		part
+	)],
+	'Scalar::Util' => [qw(
+		blessed
+		dualvar
+		isweak
+		readonly
+		refaddr
+		reftype
+		tainted
+		weaken
+		isvstring
+		looks_like_number
+		set_prototype
+	)],
+	'DDP' => [qw(
+		+p
+	)],
+	'IO::All' => [qw(
+		+io
+	),[qw(
+		-utf8
+	)]],
+);
 
-sub import { 
+my @packages_order;
+my %packages_parsed;
+
+my %import_args;
+
+sub import {
 	my $target = scalar caller;
 
-	Carp::Always->import::into($target);
-	Path::Class->import::into($target,qw( file dir ));
-	Carp->import::into($target,qw( confess croak carp ));
-	File::ShareDir->import::into($target,qw( dist_dir module_dir class_dir ));
-	File::Copy::Recursive->import::into($target,qw( dircopy ));
-	File::Remove->import::into($target,qw( remove ));
-	List::MoreUtils->import::into($target,qw(
-		any all none notall firstidx first_index lastidx last_index
-		insert_after insert_after_string apply indexes after_incl
-		before_incl firstval first_value lastval last_value each_array
-		each_arrayref pairwise natatime mesh zip uniq distinct minmax part
-	));
-	Scalar::Util->import::into($target,qw(
-		blessed dualvar isweak readonly
-		refaddr reftype tainted weaken isvstring looks_like_number
-		set_prototype
-	));
-	my $stash = Package::Stash->new($target);
+	return if defined $import_args{$target};
 
+	my $class = shift;
+	my @args = @_;
+
+	$class->_gid_import($target,@args);
+
+	my $stash = Package::Stash->new($target);
 	$stash->add_symbol('&package_stash',sub { $stash });
 
 	$stash->add_symbol('&env',sub {
 		my $key = join('_',@_);
 		return defined $ENV{$key} ? $ENV{$key} : "";
 	});
+}
+
+sub _gid_load_packages {
+	my ( $self ) = @_;
+
+	return if %packages_parsed;
+
+	while (@packages) {
+		my $package = shift @packages;
+		my $value = shift @packages;
+		my @values = ref $value eq 'ARRAY'
+			? @{$value}
+			: defined $value
+				? ($value)
+				: ();
+		my @package_functions;
+		my @package_import_args;
+		my @package_features;
+		for (@values) {
+			if (ref $_ eq '') {
+				if ($_ =~ m/^\+([\w^+]+)$/) {
+					push @package_functions, $1;
+				} elsif ($_ =~ m/^:(\w+)$/) {
+					push @package_features, $1;
+				} else {
+					push @package_functions, $_;
+					push @package_import_args, $_;
+				}
+			} elsif (ref $_ eq 'ARRAY') {
+				push @package_import_args, @{$_};
+			}
+		}
+		push @packages_order, $package;
+		$packages_parsed{$package} = [
+			\@package_functions,
+			\@package_import_args,
+			\@package_features,
+		];
+	}
+}
+
+sub _gid_import {
+	my ( $class, $target, @args ) = @_;
+	$class->_gid_load_packages;
+	$class->_gid_parse_import_args($target, @args);
+	my %include;
+	my %exclude;
+	my %features;
+	%include = %{$import_args{$target}->{include}} if defined $import_args{$target}->{include};
+	%exclude = %{$import_args{$target}->{exclude}} if defined $import_args{$target}->{exclude};
+	%features = %{$import_args{$target}->{features}} if defined $import_args{$target}->{features};
+	for (@packages_order) {
+		$class->_gid_import_package(
+			$target,
+			$_,
+			$packages_parsed{$_},
+			[\%include,\%exclude,\%features],
+			@args
+		);
+	}
+}
+
+sub _gid_import_package {
+	my ( $class, $target, $import, $package_parse, $include_exclude_features, @args ) = @_;
+	my @package_functions = @{$package_parse->[0]};
+	my @package_import_args = @{$package_parse->[1]};
+	my @package_features = @{$package_parse->[2]};
+	my %include = %{$include_exclude_features->[0]};
+	my %exclude = %{$include_exclude_features->[1]};
+	my %features = %{$include_exclude_features->[2]};
+	my $load_package = 0;
+	my @use_import_args;
+	if (%include) {
+		if (defined $include{$import}) {
+			$load_package = 1;
+		} else {
+			for my $pf (@package_functions) {
+				if (grep { $_ eq $pf } keys %include) {
+					$load_package = 1;
+					for my $pia (grep { $_ eq $pf } @package_import_args) {
+						push @use_import_args, $pia;
+					}
+				}
+			}
+		}
+	} elsif (%exclude) {
+		unless (defined $exclude{$import}) {
+			my @not_excluded_package_functions;
+			for my $pf (@package_functions) {
+				unless (defined $exclude{$pf}) {
+					push @not_excluded_package_functions, $pf;
+					for my $pia (grep { $_ eq $pf } @package_import_args) {
+						push @use_import_args, $pia;
+					}
+				}
+			}
+			if (@not_excluded_package_functions) {
+				$load_package = 1;
+			}
+		}
+	} else {
+		$load_package = 1;
+		@use_import_args = @package_import_args;
+	}
+	if (%features) {
+		# TODO
+	}
+	if ($load_package) {
+		$import->import::into($target,@use_import_args);
+	}
+}
+
+sub _gid_parse_import_args {
+	my ( $class, $target, @args_list ) = @_;
+	my %args;
+	for (@args_list) {
+		if ($_ =~ m/^-(.*)/) {
+			$args{exclude} = {} unless defined $args{exclude};
+			$args{exclude}->{$1} = 1;
+		} elsif ($_ =~ m/^\+(.*)/) {
+			$args{feature} = {} unless defined $args{feature};
+			$args{feature}->{$1} = 1;
+		} else {
+			$args{include} = {} unless defined $args{include};
+			$args{include}->{$_} = 1;
+		}
+	}
+	die __PACKAGE__.": you can't define -exclude's and include's on import of GID"
+		if defined $args{exclude} and defined $args{include};
+	$import_args{$target} = \%args;
 }
 
 1;
