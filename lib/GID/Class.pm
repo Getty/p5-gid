@@ -34,6 +34,9 @@ sub import {
 		HasEnv
 		Options
 		Types::MooseLike
+		late
+		Override
+		Augment
 	));
 
 	namespace::clean->import::into($target);

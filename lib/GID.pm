@@ -180,7 +180,6 @@ sub _gid_import {
 		);
 	}
 	$class->_gid_import_functions($target,[\%include,\%exclude,\%features]);
-	namespace::clean->import::into($class);
 }
 
 sub _gid_import_functions {
