@@ -44,6 +44,12 @@ eval {
 	$t2->readonly(1);
 };
 
-like($@,qr/Usage: GIDTest::Class2::readonly\(self\)/,'Failing on readonly overriding');
+my $error = $@;
+
+if ($error =~ m/^Usage/) {
+	like($@,qr/Usage: GIDTest::Class2::readonly\(self\)/,'Failing on readonly overriding (via XS)');
+} else {
+	like($@,qr/readonly is a read\-only accessor/,'Failing on readonly overriding');
+}
 
 done_testing;

@@ -22,6 +22,9 @@ use namespace::clean ();
 use GID ();
 use MooX ();
 
+use MooX::Override ();
+use MooX::Augment ();
+
 sub import {
 	my $class = shift;
 	my $target = scalar caller;
@@ -35,9 +38,10 @@ sub import {
 		Options
 		Types::MooseLike
 		late
-		Override
-		Augment
 	));
+
+	MooX::Override->import::into($target,'-class');
+	MooX::Augment->import::into($target,'-class');
 
 	namespace::clean->import::into($target);
 
