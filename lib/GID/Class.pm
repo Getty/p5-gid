@@ -28,7 +28,7 @@ sub import {
 
 	GID->import::into($target,@args);
 
-	my $stash = $target->package_stash;
+	my $stash = Package::Stash->new($target);
 	my @gid_methods = $stash->list_all_symbols('CODE');
 
 	MooX->import::into($target,qw(
