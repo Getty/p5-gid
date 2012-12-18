@@ -19,6 +19,7 @@ use strictures 1;
 use Import::Into;
 use Package::Stash;
 use Class::Load qw( load_class );
+use namespace::clean ();
 
 my %gid_packages = (
 	DB => 'GID::DB',
@@ -179,6 +180,7 @@ sub _gid_import {
 		);
 	}
 	$class->_gid_import_functions($target,[\%include,\%exclude,\%features]);
+	namespace::clean->import::into($class);
 }
 
 sub _gid_import_functions {
