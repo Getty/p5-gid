@@ -38,10 +38,10 @@ sub import {
 		Options
 		Types::MooseLike
 		late
-	));
-
-	MooX::Override->import::into($target,'-class');
-	MooX::Augment->import::into($target,'-class');
+	),
+		Override => [qw( -class )],
+		Augment => [qw( -class )],
+	);
 
 	namespace::clean->import::into($target);
 
