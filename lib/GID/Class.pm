@@ -52,12 +52,8 @@ sub import {
 				$has->($attribute,@attribute_args);
 				$target->class_stash->around_method($attribute,sub {
 					my $attribute_method = shift;
-					my @args = @_;
-					if (blessed $args[0]) {
-						return $attribute_method->(@args);
-					} else {
-						return $gid_method->(@args);
-					}
+					return $attribute_method->(@_) if blessed $_[0];
+					return $gid_method->(@_);
 				});
 			} else {
 				$has->($attribute,@attribute_args);
