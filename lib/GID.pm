@@ -35,6 +35,12 @@ my @packages = (
 	'DateTime' => undef,
 	'DateTime::Duration' => undef,
 	'URI' => undef,
+	'File::chdir' => undef,
+	'Cwd' => [qw(
+		cwd
+		getcwd
+		chdir
+	)],
 	'Class::Method::Modifiers' => undef,
 	'Carp' => [qw(
 		confess
@@ -137,15 +143,7 @@ my @packages = (
 	# GID own core modules
 	#
 
-	'GID::IO' => [qw(
-		file
-		dir
-		foreign_file
-		foreign_dir
-		tempdir
-		tempfile
-		rmtree
-	)],
+	'GID::IO' => [@GID::IO::EXPORT],
 );
 
 my @packages_order;

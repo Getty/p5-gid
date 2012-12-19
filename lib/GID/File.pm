@@ -4,4 +4,6 @@ package GID::File;
 use strictures 1;
 use base 'Path::Class::File';
 
+sub rm { shift->remove(@_) }
+
 1;

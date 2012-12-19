@@ -1,38 +1,69 @@
 package GID::IO;
 # ABSTRACT: IO functions of GID, like dir() and file()
 
+=head1 SYNOPSIS
+
+  use GID::IO;
+
+  my $dir = dir('/home/foo');
+  my $file = $dir->file('bar.txt');
+  my $other_file = file('some','path','foobar.txt');
+
+  my $tempdir = tempdir;
+  my $tempfile = tempfile;
+  my $other_tempfile = $tempdir->tempfile;
+  $other_tempfile->spew('I will disappear');
+
+  $file->touch;
+
+  my $subdir = $dir->mkdir('foobar');
+  $subdir->rmrf;
+
+  $dir->files(sub {
+    print "Filename in $dir: $_\n";
+  });
+
+  print "$dir not empty" unless $dir->rm;
+
+  $file->rm;
+
+=head1 DESCRIPTION
+
+See L<GID::File> and L<GID::Dir>
+
+=cut
+
 use strictures 1;
 use Exporter 'import';
-use vars qw( @EXPORT );
 
 use GID::File;
 use GID::Dir;
 use File::Temp ();
 
-@EXPORT = qw(
+our @EXPORT = qw(
 	dir
 	file
 	foreign_file
 	foreign_dir
 	tempdir
 	tempfile
-	rmtree
+	rmrf
 	mkdir
 );
 
-sub dir { GID::Dir->new(@_) }
-sub file { GID::File->new(@_) }
+sub dir { GID::Dir->new(@_)->absolute }
+sub file { GID::File->new(@_)->absolute }
 sub foreign_dir { GID::Dir->new_foreign(@_) }
 sub foreign_file { GID::File->new_foreign(@_) }
-sub tempdir { GID::Dir->new(File::Temp::tempdir(@_)) }
+sub tempdir { GID::Dir->new(File::Temp::tempdir(@_))->absolute }
 
 sub tempfile {
 	my ($fh, $filename) = File::Temp::tempfile(@_);
-	GID::File->new($filename);
+	GID::File->new($filename)->absolute;
 }
 
-sub rmtree { dir(@_)->rmtree }
+sub rmrf { dir(@_)->rmrf }
 
-sub mkdir { GID::Dir->mkdir(@_) }
+sub mkdir { GID::Dir->mkdir(@_)->absolute }
 
 1;

@@ -10,11 +10,15 @@ use GID::File;
 sub mkdir {
 	my $self = shift;
 	my $newdir = blessed $self
-		? $self->subdir(@_)
-		: $self->new(@_);
+		? $self->dir(@_)
+		: $self->new(@_)->absolute;
 	$newdir->mkpath;
 	return $newdir;
 }
+
+sub dir { shift->subdir(@_) }
+sub rm { shift->remove(@_) }
+sub rmrf { shift->rmtree(@_) }
 
 sub tempfile {
 	my $self = shift;
@@ -23,7 +27,7 @@ sub tempfile {
 	return GID::File->new($filename);
 }
 
-sub _parse_selectors {
+sub _parse_entities_selectors {
 	my $self = shift;
 	my @selectors;
 	my $code;
@@ -40,7 +44,7 @@ sub _parse_selectors {
 
 sub files {
 	my $self = shift;
-	my ( $code, @selectors ) = $self->_parse_selectors(@_);
+	my ( $code, @selectors ) = $self->_parse_entities_selectors(@_);
 	$self->entities(@selectors,sub {
 		$code->() unless $_->is_dir;
 	});
@@ -48,7 +52,7 @@ sub files {
 
 sub dirs {
 	my $self = shift;
-	my ( $code, @selectors ) = $self->_parse_selectors(@_);
+	my ( $code, @selectors ) = $self->_parse_entities_selectors(@_);
 	$self->entities(@selectors,sub {
 		$code->() if $_->is_dir;
 	});
@@ -56,7 +60,7 @@ sub dirs {
 
 sub entities {
 	my $self = shift;
-	my ( $code, @selectors ) = $self->_parse_selectors(@_);
+	my ( $code, @selectors ) = $self->_parse_entities_selectors(@_);
 	for my $child ($self->children) {
 		my $match;
 		for (@selectors) {
