@@ -24,6 +24,7 @@ use namespace::clean ();
 my %gid_packages = (
 	DB => 'GID::DB',
 	Web => 'GID::Web',
+	IO => 'GID::IO',
 );
 
 my @packages = (
@@ -35,10 +36,6 @@ my @packages = (
 	'DateTime::Duration' => undef,
 	'URI' => undef,
 	'Class::Method::Modifiers' => undef,
-	'Path::Class' => [qw(
-		file
-		dir
-	)],
 	'Carp' => [qw(
 		confess
 		croak
@@ -51,9 +48,6 @@ my @packages = (
 	)],
 	'File::Copy::Recursive' => [qw(
 		dircopy
-	)],
-	'File::Remove' => [qw(
-		remove
 	)],
 	'List::MoreUtils' => [qw(
 		any
@@ -105,10 +99,6 @@ my @packages = (
 		is_class_loaded
 		load_first_existing_class
 	)],
-	'File::Temp' => [qw(
-		tempfile
-		tempdir
-	)],
 	'URL::Encode' => [qw(
 		url_encode
 		url_encode_utf8
@@ -142,6 +132,20 @@ my @packages = (
 	),[qw(
 		-utf8
 	)]],
+
+	#
+	# GID own core modules
+	#
+
+	'GID::IO' => [qw(
+		file
+		dir
+		foreign_file
+		foreign_dir
+		tempdir
+		tempfile
+		rmtree
+	)],
 );
 
 my @packages_order;
@@ -189,6 +193,10 @@ sub _gid_import_functions {
 
 	$self->_gid_import_function($stash,'package_stash',sub {
 		$stash
+	}, $include_exclude_features);
+
+	$self->_gid_import_function($stash,'say',sub {
+		print join("",@_)."\n";
 	}, $include_exclude_features);
 
 	$self->_gid_import_function($stash,'env',sub {
