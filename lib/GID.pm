@@ -130,6 +130,9 @@ my @packages = (
 		+is_success
 		+is_error
 	)],
+	'Unknown::Values' => [qw(
+		+unknown
+	)],
 	'DDP' => [qw(
 		+p
 	)],

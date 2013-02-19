@@ -21,6 +21,7 @@ use Test::More;
 
 	has readonly => ( is => 'ro' );
 	has after => ( is => 'ro' );
+	has unknown => ( is => 'ro', default => sub { unknown } );
 }
 
 my $t = GIDTest::Class->new( last_index => 1 );
@@ -36,6 +37,7 @@ my $t2 = GIDTest::Class2->new( readonly => 2, after => 3 );
 
 is($t2->readonly,2,'readonly is set via constructor');
 is($t2->after,3,'after is set via constructor');
+isa_ok($t2->unknown,'Unknown::Values::Instance');
 isa_ok($t2,'GIDTest::Class');
 isa_ok($t2,'GID::Object');
 isa_ok($t2,'Moo::Object');
