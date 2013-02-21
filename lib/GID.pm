@@ -132,6 +132,7 @@ my @packages = (
 	)],
 	'Unknown::Values' => [qw(
 		+unknown
+		+is_unknown
 	)],
 	'DDP' => [qw(
 		+p
