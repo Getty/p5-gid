@@ -17,7 +17,6 @@ documentation.
 
 use strictures 1;
 use Import::Into;
-use Package::Stash;
 use Class::Load qw( load_class );
 use namespace::clean ();
 
@@ -188,6 +187,10 @@ sub _gid_import {
 	$class->_gid_import_functions($target,[\%include,\%exclude,\%features]);
 }
 
+use Package::Stash;
+use DateTime::Duration;
+use List::Util qw( reduce );
+
 sub _gid_import_functions {
 	my ( $self, $target, $include_exclude_features ) = @_;
 
@@ -203,9 +206,8 @@ sub _gid_import_functions {
 
 	$self->_gid_import_function($stash,'env',sub {
 		my $key = join('_',@_);
-		return defined $ENV{$key} ? $ENV{$key} : "";
+		defined $ENV{$key} ? $ENV{$key} : "";
 	}, $include_exclude_features);
-
 }
 
 sub _gid_import_function {
